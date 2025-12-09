@@ -24,9 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let thoughtCounter = 0;
     let currentEditId = null; // 編集中の要素のID
 
-    // --- サイト初期状態 (記憶も思考もなし) ---
-    // 初期データのレンダリングを削除し、リストは空のまま。
-
     // --- 記憶アイテムの追加/編集関数 ---
     function addMemory(id, name, type, parentId, relation) {
         let item;
@@ -41,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
             memoryCounter++;
             id = `memory-${memoryCounter}`;
             item = document.createElement('div');
-            item.classList.add('memory-item', `${type}-item`);
+            item.classList.add('memory-item');
             item.setAttribute('draggable', true);
             item.setAttribute('data-id', id);
             item.setAttribute('data-type', type);
@@ -64,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.setAttribute('data-collapsed', 'false');
             item.classList.remove('knowledge-item');
             item.classList.add('category-item');
+            item.style.display = 'flex'; // 常に表示
         } else { // 知識
             item.innerHTML = `
                 <div>
@@ -77,18 +75,26 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             item.classList.remove('category-item');
             item.classList.add('knowledge-item');
+            
+            // 親カテゴリが折りたたまれていたら非表示
+            const parentElement = memoryList.querySelector(`[data-id="${parentId}"]`);
+            if (parentElement && parentElement.getAttribute('data-collapsed') === 'true') {
+                 item.style.display = 'none';
+            } else {
+                 item.style.display = 'flex';
+            }
         }
 
         // 既存の要素の移動（新規作成または編集による親の変更時）
-        if (!id || item.parentNode !== memoryList) {
-             memoryList.appendChild(item); // とりあえずリストに追加
+        if (!id || !memoryList.contains(item)) {
+             memoryList.appendChild(item); 
         }
 
         // 階層構造の適用（知識の場合）
         if (type === 'knowledge' && parentId) {
             const parentElement = memoryList.querySelector(`[data-id="${parentId}"]`);
             if (parentElement) {
-                // 知識を親カテゴリの直後の適切な位置に移動させる（DOM操作）
+                // 知識を親カテゴリの直後の適切な位置に移動させる
                 let nextSibling = parentElement.nextElementSibling;
                 while (nextSibling && nextSibling.classList.contains('knowledge-item')) {
                     nextSibling = nextSibling.nextElementSibling;
@@ -102,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 思考ブロックの追加/編集関数 ---
-    function addThought(id, name = '新しい思考') {
+    function addThought(id = null, name = '新しい思考') {
         let block;
         
         if (id) {
@@ -149,16 +155,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- イベントリスナーの設定 ---
+    // --- イベントリスナーの設定 (記憶) ---
     function setupEventListeners(item) {
         // ドラッグ＆ドロップ設定
         setupDragDrop(item);
 
         // カテゴリの折りたたみ機能
         if (item.classList.contains('category-item')) {
+            // トグルアイコンまたはカテゴリ名クリックで折りたたみ
             item.addEventListener('click', (e) => {
-                // 編集・削除ボタンのクリックは無視
-                if (e.target.closest('.memory-actions')) return;
+                if (e.target.closest('.memory-actions')) return; // ボタンのクリックは無視
                 
                 const isCollapsed = item.getAttribute('data-collapsed') === 'true';
                 item.setAttribute('data-collapsed', isCollapsed ? 'false' : 'true');
@@ -166,37 +172,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 次の兄弟要素をチェックし、知識アイテムを非表示/表示
                 let next = item.nextElementSibling;
                 while (next && next.classList.contains('knowledge-item')) {
-                    next.style.display = isCollapsed ? 'flex' : 'none';
+                    next.style.display = isCollapsed ? 'flex' : 'none'; // flex表示に修正
                     next = next.nextElementSibling;
                 }
             });
         }
 
         // 編集ボタン
-        item.querySelector('.edit-memory-btn').addEventListener('click', () => openMemoryModal(item.getAttribute('data-id')));
+        const editBtn = item.querySelector('.edit-memory-btn');
+        if(editBtn) {
+            editBtn.addEventListener('click', () => openMemoryModal(item.getAttribute('data-id')));
+        }
 
         // 削除ボタン
-        item.querySelector('.delete-memory-btn').addEventListener('click', (e) => {
-            if (confirm('この記憶を削除してもよろしいですか？')) {
-                const id = e.currentTarget.getAttribute('data-id');
-                const elementToDelete = memoryList.querySelector(`[data-id="${id}"]`);
-                
-                // カテゴリを削除する場合、配下の知識も削除
-                if (elementToDelete.classList.contains('category-item')) {
-                    let next = elementToDelete.nextElementSibling;
-                    while (next && next.classList.contains('knowledge-item')) {
-                        const nextToDelete = next;
-                        next = next.nextElementSibling;
-                        nextToDelete.remove();
+        const deleteBtn = item.querySelector('.delete-memory-btn');
+        if(deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                if (confirm('この記憶を削除してもよろしいですか？（カテゴリの場合、配下の知識も削除されます）')) {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const elementToDelete = memoryList.querySelector(`[data-id="${id}"]`);
+                    
+                    // カテゴリを削除する場合、配下の知識も削除
+                    if (elementToDelete.classList.contains('category-item')) {
+                        let next = elementToDelete.nextElementSibling;
+                        while (next && next.classList.contains('knowledge-item')) {
+                            const nextToDelete = next;
+                            next = next.nextElementSibling;
+                            nextToDelete.remove();
+                        }
                     }
+                    
+                    elementToDelete.remove();
+                    updateCategorySelect();
                 }
-                
-                elementToDelete.remove();
-                updateCategorySelect();
-            }
-        });
+            });
+        }
     }
 
+    // --- イベントリスナーの設定 (思考) ---
     function setupThoughtEventListeners(block) {
         // 編集ボタン
         block.querySelector('.edit-thought-btn').addEventListener('click', (e) => {
@@ -217,24 +230,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function openMemoryModal(id = null) {
         currentEditId = id;
         
+        // モーダル表示前にカテゴリーのセレクトボックスを更新
+        updateCategorySelect(); 
+
         if (id) {
             modalTitle.textContent = '記憶を編集';
             const item = memoryList.querySelector(`[data-id="${id}"]`);
             const type = item.getAttribute('data-type');
+            const name = item.getAttribute('data-name');
+            const relation = item.getAttribute('data-relation');
             
             memoryTypeSelect.value = type;
             memoryTypeSelect.disabled = true; // 編集時はタイプ変更不可
             
             if (type === 'category') {
-                document.getElementById('category-name').value = item.getAttribute('data-name');
+                document.getElementById('category-name').value = name;
                 categoryInput.style.display = 'block';
                 knowledgeInput.style.display = 'none';
             } else {
-                document.getElementById('knowledge-name').value = item.getAttribute('data-name');
-                document.getElementById('element-relation').value = item.getAttribute('data-relation');
+                document.getElementById('knowledge-name').value = name;
+                document.getElementById('element-relation').value = relation;
                 categoryInput.style.display = 'none';
                 knowledgeInput.style.display = 'block';
-                // 所属カテゴリの特定は複雑になるため、今回は簡易的に親の選択をスキップ
+                // 所属カテゴリの編集は構造が複雑になるため、今回は非対応とします。
             }
         } else {
             modalTitle.textContent = '記憶を追加';
@@ -260,28 +278,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 記憶モーダル保存処理 ---
     saveMemoryBtn.addEventListener('click', () => {
         const type = memoryTypeSelect.value;
-        let name, relation, parentId = null;
+        let name, relation = '', parentId = null;
 
         if (type === 'category') {
             name = document.getElementById('category-name').value.trim();
         } else {
             name = document.getElementById('knowledge-name').value.trim();
             relation = document.getElementById('element-relation').value.trim();
-            // 新規作成時のみ親カテゴリを選択可能にする
-            if (!currentEditId) {
-                 parentId = parentCategorySelect.value;
-            } else {
-                // 編集時はDOM上の位置を優先
-                const item = memoryList.querySelector(`[data-id="${currentEditId}"]`);
-                const prev = item.previousElementSibling;
-                if(prev && prev.classList.contains('category-item')) {
-                    parentId = prev.getAttribute('data-id');
-                }
-            }
+            parentId = parentCategorySelect.value;
         }
 
         if (name) {
-            addMemory(currentEditId, name, type, parentId, relation);
+            // 編集時は元のIDを使用、新規作成時はnullのまま
+            const idToUse = currentEditId; 
+            addMemory(idToUse, name, type, parentId, relation);
             memoryModal.style.display = 'none';
             currentEditId = null;
         } else {
@@ -301,6 +311,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- モーダル表示切り替えロジック ---
+    memoryTypeSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'category') {
+            categoryInput.style.display = 'block';
+            knowledgeInput.style.display = 'none';
+        } else {
+            categoryInput.style.display = 'none';
+            knowledgeInput.style.display = 'block';
+        }
+    });
+
     // --- モーダル閉じるイベント ---
     closeMemoryBtn.addEventListener('click', () => memoryModal.style.display = 'none');
     closeThoughtBtn.addEventListener('click', () => thoughtModal.style.display = 'none');
@@ -309,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target === thoughtModal) thoughtModal.style.display = 'none';
     };
 
-    // --- ドラッグ＆ドロップ機能 (再定義) ---
+    // --- ドラッグ＆ドロップ機能 ---
     
     // ドラッグ開始時
     function setupDragDrop(item) {
