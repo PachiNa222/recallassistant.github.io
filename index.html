@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>思考整理ツール</title>
+    <title>Recall Assistant</title>
     <style>
         :root {
             --sidebar-width: 300px;
@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* アイコン用 (簡易的な文字アイコン) */
+        /* アイコン用ボタン */
         .icon-btn {
             cursor: pointer;
             border: none;
@@ -79,7 +79,7 @@
             align-items: center;
             justify-content: space-between;
             font-weight: bold;
-            cursor: pointer; /* 折りたたみ用 */
+            cursor: pointer;
         }
         
         .category-content {
@@ -92,7 +92,7 @@
         /* メモリ：知識 */
         .knowledge-list {
             padding: 5px;
-            display: block; /* 折りたたみ制御用 */
+            display: block;
         }
         .knowledge-list.collapsed {
             display: none;
@@ -116,7 +116,7 @@
         .knowledge-name { font-weight: bold; }
         .knowledge-relation { font-size: 0.8em; color: #666; }
 
-        /* ドラッグ可能要素のスタイル */
+        /* ドラッグ可能要素 */
         [draggable="true"] {
             cursor: grab;
         }
@@ -217,12 +217,30 @@
             background: #fff;
             border: 1px solid #ccc;
             border-radius: 3px;
-            padding: 3px 8px;
+            padding: 4px 8px;
             font-size: 0.9em;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        
+        .dropped-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .dropped-relation {
+            font-size: 0.85em;
+            background-color: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #555;
+        }
+        
+        .dropped-category-tag {
+            font-size: 0.85em;
+            color: #888;
         }
 
         /* --- 共通：下部追加ボタン --- */
@@ -281,17 +299,15 @@
 <body>
 
     <div id="sidebar">
-        <div class="sidebar-header">記憶一覧</div>
-        <div id="memory-list">
-            </div>
+        <div class="sidebar-header">記憶</div>
+        <div id="memory-list"></div>
         <div class="add-btn-container">
             <button class="add-btn" id="add-memory-btn" title="記憶を追加">＋</button>
         </div>
     </div>
 
     <div id="main-area">
-        <div id="thought-container">
-            </div>
+        <div id="thought-container"></div>
         <div class="add-btn-container">
             <button class="add-btn" id="add-thought-btn" title="思考を追加">＋</button>
         </div>
@@ -301,8 +317,10 @@
         <div class="modal-box" id="memory-modal">
             <div class="modal-title">新規作成</div>
             
-            <label><input type="radio" name="createType" value="category" checked> カテゴリ</label>
-            <label><input type="radio" name="createType" value="knowledge"> 知識</label>
+            <div>
+                <label><input type="radio" name="createType" value="category" checked> カテゴリ</label>
+                <label><input type="radio" name="createType" value="knowledge"> 知識</label>
+            </div>
             
             <div id="input-category-group">
                 <input type="text" id="new-category-name" class="modal-input" placeholder="カテゴリ名">
@@ -311,7 +329,7 @@
             <div id="input-knowledge-group" style="display:none;">
                 <select id="target-category-select" class="modal-select"></select>
                 <input type="text" id="new-knowledge-name" class="modal-input" placeholder="知識名" style="margin-top:5px;">
-                <input type="text" id="new-knowledge-relation" class="modal-input" placeholder="要素関係" style="margin-top:5px;">
+                <input type="text" id="new-knowledge-relation" class="modal-input" placeholder="関係" style="margin-top:5px;">
             </div>
 
             <div class="modal-actions">
@@ -323,19 +341,11 @@
 
     <script>
         // --- データ管理 ---
-        // カテゴリID, 知識ID, 思考IDのユニーク生成用カウンタ
         let idCounter = 1;
         function generateId() { return 'id-' + idCounter++; }
 
-        // データ構造の例（メモリ上のみで保持）
-        let memories = [
-            // { id: 'c1', type: 'category', name: '例: プログラミング', collapsed: false, items: [] }
-            // items内: { id: 'k1', type: 'knowledge', name: 'Java', relation: 'バックエンド' }
-        ];
-
-        let thoughts = [
-            // { id: 't1', name: '思考A', text: '', items: [] } 
-        ];
+        let memories = [];
+        let thoughts = [];
 
         // --- DOM要素 ---
         const memoryListEl = document.getElementById('memory-list');
@@ -351,14 +361,14 @@
 
         // --- イベントリスナー ---
         
-        // 記憶追加ボタン（モーダル表示）
+        // 記憶追加ボタン
         document.getElementById('add-memory-btn').addEventListener('click', () => {
-            // モーダルのリセット
+            // モーダルリセット
             document.getElementById('new-category-name').value = '';
             document.getElementById('new-knowledge-name').value = '';
             document.getElementById('new-knowledge-relation').value = '';
             
-            // カテゴリ選択肢の更新
+            // カテゴリ選択肢更新
             targetCategorySelect.innerHTML = '';
             memories.forEach(cat => {
                 const opt = document.createElement('option');
@@ -367,15 +377,15 @@
                 targetCategorySelect.appendChild(opt);
             });
 
-            // 表示切替
+            // デフォルト表示設定
             const radios = document.getElementsByName('createType');
-            radios[0].checked = true; // デフォルトはカテゴリ
+            radios[0].checked = true;
             toggleModalInputs('category');
 
             modalOverlay.style.display = 'flex';
         });
 
-        // ラジオボタン切り替え時の表示制御
+        // ラジオボタン切り替え
         document.getElementsByName('createType').forEach(radio => {
             radio.addEventListener('change', (e) => {
                 toggleModalInputs(e.target.value);
@@ -396,7 +406,7 @@
             modalOverlay.style.display = 'none';
         }
 
-        // 記憶の保存処理
+        // 保存処理
         function saveMemory() {
             const type = document.querySelector('input[name="createType"]:checked').value;
             
@@ -429,7 +439,6 @@
                         name: name,
                         relation: relation
                     });
-                    // 新規追加時は開く
                     category.collapsed = false; 
                 }
             }
@@ -459,17 +468,16 @@
             memories.forEach((cat, index) => {
                 const catDiv = document.createElement('div');
                 catDiv.className = 'category-item';
-                // ドラッグ可能にする
                 catDiv.setAttribute('draggable', 'true');
                 catDiv.ondragstart = (e) => handleDragStart(e, { type: 'category', name: cat.name, id: cat.id });
 
-                // ヘッダー（名前、折りたたみ、編集、削除）
+                // ヘッダー
                 const header = document.createElement('div');
                 header.className = 'category-header';
                 
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'category-content';
-                contentDiv.onclick = () => toggleCollapse(index); // クリックで折りたたみ
+                contentDiv.onclick = () => toggleCollapse(index);
 
                 const arrow = document.createElement('span');
                 arrow.textContent = cat.collapsed ? '▶' : '▼';
@@ -484,13 +492,11 @@
 
                 const controls = document.createElement('div');
                 
-                // 編集ボタン
                 const editBtn = document.createElement('button');
                 editBtn.className = 'icon-btn';
                 editBtn.textContent = '✎';
                 editBtn.onclick = (e) => { e.stopPropagation(); editCategory(index); };
 
-                // 削除ボタン
                 const delBtn = document.createElement('button');
                 delBtn.className = 'icon-btn';
                 delBtn.textContent = '×';
@@ -511,6 +517,7 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'knowledge-item';
                     itemDiv.setAttribute('draggable', 'true');
+                    // ここでrelationもデータに含める
                     itemDiv.ondragstart = (e) => handleDragStart(e, { type: 'knowledge', name: item.name, relation: item.relation, id: item.id });
 
                     const info = document.createElement('div');
@@ -584,7 +591,7 @@
                 // 配置一覧（ドロップゾーン）
                 const label2 = document.createElement('div');
                 label2.className = 'drop-area-label';
-                label2.textContent = '配置覧';
+                label2.textContent = '配置欄';
 
                 const dropZone = document.createElement('div');
                 dropZone.className = 'drop-area';
@@ -596,18 +603,22 @@
                 th.droppedItems.forEach((dItem, dIndex) => {
                     const dEl = document.createElement('div');
                     dEl.className = 'dropped-item';
-                    let content = `<b>${dItem.name}</b>`;
+                    
+                    let content = '';
                     if(dItem.type === 'knowledge') {
-                        content += ` <small>(${dItem.relation})</small>`;
+                        // 修正：知識名 + [関係]を表示
+                        content = `<span class="dropped-name">${dItem.name}</span> <span class="dropped-relation">${dItem.relation}</span>`;
                     } else {
-                        content += ` <small>[カテゴリ]</small>`;
+                        // カテゴリ
+                        content = `<span class="dropped-name">${dItem.name}</span> <span class="dropped-category-tag">[カテゴリ]</span>`;
                     }
                     dEl.innerHTML = content;
                     
-                    // 削除ボタン（配置から削除）
+                    // 削除ボタン
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'icon-btn';
                     removeBtn.textContent = '×';
+                    removeBtn.style.marginLeft = "auto"; // 右寄せ
                     removeBtn.onclick = () => {
                         thoughts[index].droppedItems.splice(dIndex, 1);
                         renderThoughts();
@@ -628,7 +639,6 @@
 
         // --- 操作系ロジック ---
 
-        // カテゴリ操作
         function toggleCollapse(index) {
             memories[index].collapsed = !memories[index].collapsed;
             renderMemories();
@@ -647,7 +657,6 @@
             }
         }
 
-        // 知識操作
         function deleteKnowledge(catIndex, kIndex) {
             if(confirm("この知識を削除しますか？")) {
                 memories[catIndex].items.splice(kIndex, 1);
@@ -667,7 +676,6 @@
             }
         }
 
-        // 思考操作
         function deleteThought(index) {
             if(confirm("この思考シートを削除しますか？")) {
                 thoughts.splice(index, 1);
@@ -698,7 +706,6 @@
 
             try {
                 const data = JSON.parse(raw);
-                // 思考データに追加
                 thoughts[thoughtIndex].droppedItems.push(data);
                 renderThoughts();
             } catch(err) {
