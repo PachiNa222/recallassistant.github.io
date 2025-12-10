@@ -3,50 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>記憶と思考のワークスペース</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>思考整理ツール</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app-container">
-        <aside id="memory-panel">
-            <h2>🧠 記憶一覧</h2>
-            <div id="memory-list">
-                </div>
-            <button id="add-memory-btn" class="add-btn">+</button>
-        </aside>
 
-        <main id="thought-workspace">
-            <h2>💡 思考ワークスペース</h2>
-            <div id="thought-list">
-                </div>
-            <button id="add-thought-btn" class="add-btn">+</button>
-        </main>
+    <div id="sidebar">
+        <div class="sidebar-header">記憶</div>
+        <div id="memory-list">
+            </div>
+        <div class="add-btn-container">
+            <button class="add-btn" id="add-memory-btn" title="記憶を追加">＋</button>
+        </div>
     </div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h3>記憶を追加</h3>
-            <label>
-                タイプを選択:
-                <select id="memory-type-select">
-                    <option value="category">カテゴリ</option>
-                    <option value="knowledge">知識</option>
-                </select>
-            </label>
-            <div id="category-input">
-                <label for="category-name">カテゴリ名:</label>
-                <input type="text" id="category-name">
+    <div id="main-area">
+        <div id="thought-container">
             </div>
-            <div id="knowledge-input" style="display:none;">
-                <label for="knowledge-name">記憶名:</label>
-                <input type="text" id="knowledge-name">
-                <label for="element-relation">要素関係:</label>
-                <input type="text" id="element-relation">
-                <label for="parent-category">所属カテゴリ (任意):</label>
-                <select id="parent-category"></select>
+        <div class="add-btn-container">
+            <button class="add-btn" id="add-thought-btn" title="思考を追加">＋</button>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal-box" id="memory-modal">
+            <div class="modal-title">新規作成</div>
+            
+            <label><input type="radio" name="createType" value="category" checked> カテゴリ</label>
+            <label><input type="radio" name="createType" value="knowledge"> 知識</label>
+            
+            <div id="input-category-group">
+                <input type="text" id="new-category-name" class="modal-input" placeholder="カテゴリ名">
             </div>
-            <button id="save-memory-btn">保存</button>
-            <button id="close-modal-btn">閉じる</button>
+
+            <div id="input-knowledge-group" style="display:none;">
+                <select id="target-category-select" class="modal-select"></select>
+                <input type="text" id="new-knowledge-name" class="modal-input" placeholder="知識名" style="margin-top:5px;">
+                <input type="text" id="new-knowledge-relation" class="modal-input" placeholder="要素関係" style="margin-top:5px;">
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="closeModal()">キャンセル</button>
+                <button onclick="saveMemory()">作成</button>
+            </div>
         </div>
     </div>
 
