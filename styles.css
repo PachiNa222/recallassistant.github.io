@@ -1,5 +1,10 @@
+@charset "utf-8";
+/* =========================================
+   CSS: デザインとレイアウトの定義
+   ========================================= */
+/* 基本の色やサイズの定義 */
 :root {
-    --sidebar-width: 300px;
+    --sidebar-width: 300px; /* 左側の幅 */
     --bg-color: #f4f5f7;
     --border-color: #ddd;
     --primary-color: #0079bf;
@@ -15,14 +20,14 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Helvetica Neue", Arial, sans-serif;
-    display: flex;
+    display: flex; /* 画面全体を左右に分割するレイアウト */
     height: 100vh;
     background-color: var(--bg-color);
     color: var(--text-color);
     overflow: hidden;
 }
 
-/* アイコン用 (簡易的な文字アイコン) */
+/* 編集・削除などのアイコンボタンの共通スタイル */
 .icon-btn {
     cursor: pointer;
     border: none;
@@ -34,7 +39,9 @@ body {
 }
 .icon-btn:hover { color: var(--primary-color); }
 
-/* --- 左側：記憶サイドバー --- */
+/* -----------------------------------------
+   左側エリア（記憶サイドバー）のスタイル
+   ----------------------------------------- */
 #sidebar {
     width: var(--sidebar-width);
     background-color: var(--white);
@@ -53,11 +60,11 @@ body {
 
 #memory-list {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: auto; /* コンテンツが多い場合はスクロール */
     padding: 10px;
 }
 
-/* メモリ：カテゴリ */
+/* カテゴリ（外枠）のスタイル */
 .category-item {
     border: 1px solid var(--border-color);
     margin-bottom: 10px;
@@ -72,7 +79,7 @@ body {
     align-items: center;
     justify-content: space-between;
     font-weight: bold;
-    cursor: pointer; /* 折りたたみ用 */
+    cursor: pointer;
 }
 
 .category-content {
@@ -82,18 +89,20 @@ body {
     flex: 1;
 }
 
-/* メモリ：知識 */
+/* 知識リスト（カテゴリの中身）のスタイル */
 .knowledge-list {
     padding: 5px;
-    display: block; /* 折りたたみ制御用 */
+    display: block;
 }
+/* 折りたたみ機能：このクラスがつくと非表示になる */
 .knowledge-list.collapsed {
     display: none;
 }
 
+/* 知識アイテム単体のスタイル */
 .knowledge-item {
     border: 1px solid var(--border-color);
-    margin: 5px 0 5px 15px; /* インデント */
+    margin: 5px 0 5px 15px; /* インデント（字下げ）で階層を表現 */
     padding: 5px;
     background: #fff;
     font-size: 0.9em;
@@ -109,7 +118,7 @@ body {
 .knowledge-name { font-weight: bold; }
 .knowledge-relation { font-size: 0.8em; color: #666; }
 
-/* ドラッグ可能要素のスタイル */
+/* ★ドラッグ可能要素（draggable="true"）のカーソルスタイル */
 [draggable="true"] {
     cursor: grab;
 }
@@ -117,7 +126,9 @@ body {
     cursor: grabbing;
 }
 
-/* --- 右側：思考エリア --- */
+/* -----------------------------------------
+   右側エリア（思考メインエリア）のスタイル
+   ----------------------------------------- */
 #main-area {
     flex: 1;
     display: flex;
@@ -134,7 +145,7 @@ body {
     gap: 20px;
 }
 
-/* 思考カード */
+/* 思考カード全体のスタイル */
 .thought-card {
     background: var(--white);
     border: 1px solid var(--border-color);
@@ -160,7 +171,7 @@ body {
     padding: 2px 5px;
 }
 .thought-title:hover {
-    border: 1px dashed #ccc;
+    border: 1px dashed #ccc; /* ホバー時に編集可能であることを示唆 */
 }
 
 .thought-body {
@@ -170,7 +181,7 @@ body {
     gap: 15px;
 }
 
-/* 自由入力欄 */
+/* ラベル（自由入力欄、配置一覧） */
 .input-area-label, .drop-area-label {
     font-size: 0.85em;
     color: #555;
@@ -178,6 +189,7 @@ body {
     font-weight: bold;
 }
 
+/* 自由入力エリア（テキストエリア） */
 .free-input {
     width: 100%;
     min-height: 80px;
@@ -188,7 +200,7 @@ body {
     resize: vertical;
 }
 
-/* 配置一覧（ドロップエリア） */
+/* ★配置一覧（ドロップエリア）のスタイル */
 .drop-area {
     min-height: 80px;
     border: 2px dashed var(--border-color);
@@ -200,25 +212,47 @@ body {
     gap: 5px;
     transition: background 0.2s;
 }
+/* ドラッグ中のアイテムが上に来た時の色変化 */
 .drop-area.drag-over {
     background: #e6f7ff;
     border-color: var(--primary-color);
 }
 
-/* ドロップされたアイテムのスタイル */
+/* ★ドロップされて配置されたアイテムのスタイル */
 .dropped-item {
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 3px;
-    padding: 3px 8px;
+    padding: 4px 8px;
     font-size: 0.9em;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* --- 共通：下部追加ボタン --- */
+.dropped-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 「知識」の「関係」を表示するバッジのスタイル */
+.dropped-relation {
+    font-size: 0.85em;
+    background-color: #eee;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #555;
+}
+
+.dropped-category-tag {
+    font-size: 0.85em;
+    color: #888;
+}
+
+/* -----------------------------------------
+   共通パーツ：下部の「＋」追加ボタン
+   ----------------------------------------- */
 .add-btn-container {
     padding: 15px;
     border-top: 1px solid var(--border-color);
@@ -244,12 +278,14 @@ body {
     background-color: #eee;
 }
 
-/* --- モーダル --- */
+/* -----------------------------------------
+   モーダル（ポップアップ入力画面）
+   ----------------------------------------- */
 #modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.4);
-    display: none;
+    display: none; /* 初期状態は非表示 */
     justify-content: center;
     align-items: center;
     z-index: 1000;
