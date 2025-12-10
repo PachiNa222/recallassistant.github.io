@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>記憶と思考のワークスペース</title>
-<link rel="stylesheet" href="{{ site.baseurl }}/style.scss">
-    <!--><link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css"><-->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
@@ -13,20 +12,20 @@
             <h2>🧠 記憶一覧</h2>
             <div id="memory-list">
                 </div>
-            <button id="add-memory-btn" class="add-btn" data-type="memory">+</button>
+            <button id="add-memory-btn" class="add-btn">+</button>
         </aside>
 
         <main id="thought-workspace">
             <h2>💡 思考ワークスペース</h2>
             <div id="thought-list">
                 </div>
-            <button id="add-thought-btn" class="add-btn" data-type="thought">+</button>
+            <button id="add-thought-btn" class="add-btn">+</button>
         </main>
     </div>
 
     <div id="modal" class="modal">
         <div class="modal-content">
-            <h3 id="modal-title">記憶を追加</h3>
+            <h3>記憶を追加</h3>
             <label>
                 タイプを選択:
                 <select id="memory-type-select">
@@ -48,16 +47,6 @@
             </div>
             <button id="save-memory-btn">保存</button>
             <button id="close-modal-btn">閉じる</button>
-        </div>
-    </div>
-
-    <div id="thought-modal" class="modal">
-        <div class="modal-content">
-            <h3>思考を編集</h3>
-            <label for="thought-name-edit">思考名:</label>
-            <input type="text" id="thought-name-edit">
-            <button id="save-thought-btn">保存</button>
-            <button id="close-thought-modal-btn">閉じる</button>
         </div>
     </div>
 
