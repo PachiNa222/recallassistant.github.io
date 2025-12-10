@@ -1,10 +1,10 @@
-@charset "utf-8";
 /* =========================================
    CSS: デザインとレイアウトの定義
    ========================================= */
+
 /* 基本の色やサイズの定義 */
 :root {
-    --sidebar-width: 300px; /* 左側の幅 */
+    --sidebar-width: 300px;
     --bg-color: #f4f5f7;
     --border-color: #ddd;
     --primary-color: #0079bf;
@@ -20,14 +20,14 @@ body {
     margin: 0;
     padding: 0;
     font-family: "Helvetica Neue", Arial, sans-serif;
-    display: flex; /* 画面全体を左右に分割するレイアウト */
+    display: flex;
     height: 100vh;
     background-color: var(--bg-color);
     color: var(--text-color);
     overflow: hidden;
 }
 
-/* 編集・削除などのアイコンボタンの共通スタイル */
+/* アイコン用ボタン */
 .icon-btn {
     cursor: pointer;
     border: none;
@@ -39,9 +39,7 @@ body {
 }
 .icon-btn:hover { color: var(--primary-color); }
 
-/* -----------------------------------------
-   左側エリア（記憶サイドバー）のスタイル
-   ----------------------------------------- */
+/* --- 左側エリア（記憶サイドバー） --- */
 #sidebar {
     width: var(--sidebar-width);
     background-color: var(--white);
@@ -60,11 +58,11 @@ body {
 
 #memory-list {
     flex: 1;
-    overflow-y: auto; /* コンテンツが多い場合はスクロール */
+    overflow-y: auto;
     padding: 10px;
 }
 
-/* カテゴリ（外枠）のスタイル */
+/* カテゴリ */
 .category-item {
     border: 1px solid var(--border-color);
     margin-bottom: 10px;
@@ -89,20 +87,19 @@ body {
     flex: 1;
 }
 
-/* 知識リスト（カテゴリの中身）のスタイル */
+/* 知識リスト */
 .knowledge-list {
     padding: 5px;
     display: block;
 }
-/* 折りたたみ機能：このクラスがつくと非表示になる */
 .knowledge-list.collapsed {
     display: none;
 }
 
-/* 知識アイテム単体のスタイル */
+/* 知識アイテム */
 .knowledge-item {
     border: 1px solid var(--border-color);
-    margin: 5px 0 5px 15px; /* インデント（字下げ）で階層を表現 */
+    margin: 5px 0 5px 15px;
     padding: 5px;
     background: #fff;
     font-size: 0.9em;
@@ -118,7 +115,7 @@ body {
 .knowledge-name { font-weight: bold; }
 .knowledge-relation { font-size: 0.8em; color: #666; }
 
-/* ★ドラッグ可能要素（draggable="true"）のカーソルスタイル */
+/* ドラッグ可能要素 */
 [draggable="true"] {
     cursor: grab;
 }
@@ -126,9 +123,7 @@ body {
     cursor: grabbing;
 }
 
-/* -----------------------------------------
-   右側エリア（思考メインエリア）のスタイル
-   ----------------------------------------- */
+/* --- 右側エリア（思考メインエリア） --- */
 #main-area {
     flex: 1;
     display: flex;
@@ -145,7 +140,7 @@ body {
     gap: 20px;
 }
 
-/* 思考カード全体のスタイル */
+/* 思考カード */
 .thought-card {
     background: var(--white);
     border: 1px solid var(--border-color);
@@ -171,7 +166,7 @@ body {
     padding: 2px 5px;
 }
 .thought-title:hover {
-    border: 1px dashed #ccc; /* ホバー時に編集可能であることを示唆 */
+    border: 1px dashed #ccc;
 }
 
 .thought-body {
@@ -181,7 +176,7 @@ body {
     gap: 15px;
 }
 
-/* ラベル（自由入力欄、配置一覧） */
+/* ラベル */
 .input-area-label, .drop-area-label {
     font-size: 0.85em;
     color: #555;
@@ -189,7 +184,7 @@ body {
     font-weight: bold;
 }
 
-/* 自由入力エリア（テキストエリア） */
+/* 自由入力エリア */
 .free-input {
     width: 100%;
     min-height: 80px;
@@ -200,7 +195,7 @@ body {
     resize: vertical;
 }
 
-/* ★配置一覧（ドロップエリア）のスタイル */
+/* 配置一覧（ドロップエリア） */
 .drop-area {
     min-height: 80px;
     border: 2px dashed var(--border-color);
@@ -209,50 +204,58 @@ body {
     background: #fafafa;
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 5px; /* アイテム間の隙間 */
+    align-content: flex-start; /* 複数行になったとき上詰め */
     transition: background 0.2s;
 }
-/* ドラッグ中のアイテムが上に来た時の色変化 */
 .drop-area.drag-over {
     background: #e6f7ff;
     border-color: var(--primary-color);
 }
 
-/* ★ドロップされて配置されたアイテムのスタイル */
+/* 配置アイテム（外枠） */
 .dropped-item {
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 3px;
-    padding: 4px 8px;
+    padding: 6px 10px; /* 余白を少し広げる */
     font-size: 0.9em;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: center; /* 削除ボタンとの位置合わせ */
+    gap: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* ★追加：名前と関係を縦並びにするためのコンテナ */
+.dropped-info {
+    display: flex;
+    flex-direction: column; /* 縦並び */
+    gap: 3px; /* 上下の間隔 */
 }
 
 .dropped-name {
     font-weight: bold;
     color: #333;
+    line-height: 1.2;
 }
 
-/* 「知識」の「関係」を表示するバッジのスタイル */
+/* 関係バッジのスタイル調整 */
 .dropped-relation {
     font-size: 0.85em;
     background-color: #eee;
     padding: 2px 6px;
     border-radius: 4px;
     color: #555;
+    align-self: flex-start; /* 左寄せ（親がflex-columnなので横幅いっぱいに広がるのを防ぐ） */
 }
 
 .dropped-category-tag {
     font-size: 0.85em;
     color: #888;
+    align-self: flex-start;
 }
 
-/* -----------------------------------------
-   共通パーツ：下部の「＋」追加ボタン
-   ----------------------------------------- */
+/* --- 共通：下部追加ボタン --- */
 .add-btn-container {
     padding: 15px;
     border-top: 1px solid var(--border-color);
@@ -278,14 +281,12 @@ body {
     background-color: #eee;
 }
 
-/* -----------------------------------------
-   モーダル（ポップアップ入力画面）
-   ----------------------------------------- */
+/* --- モーダル --- */
 #modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.4);
-    display: none; /* 初期状態は非表示 */
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
