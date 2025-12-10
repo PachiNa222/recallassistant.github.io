@@ -182,11 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.setAttribute('data-collapsed', isCollapsed ? 'false' : 'true');
                 
                 // 次の兄弟要素をチェックし、知識アイテムを非表示/表示
+                const categoryId = item.getAttribute('data-id');
                 let next = item.nextElementSibling;
-                while (next && next.classList.contains('knowledge-item')) {
-                    // 親IDが現在のカテゴリと一致する知識アイテムのみを操作
-                    if (next.getAttribute('data-parent-id') === item.getAttribute('data-id')) {
+                while (next) {
+                    if (next.classList.contains('knowledge-item') && next.getAttribute('data-parent-id') === categoryId) {
                         next.style.display = isCollapsed ? 'flex' : 'none'; // flex表示に修正
+                    } else if (next.classList.contains('category-item')) {
+                        // 次のカテゴリに到達したら、このカテゴリ配下の処理は終了
+                        break;
                     }
                     next = next.nextElementSibling;
                 }
@@ -207,20 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     const id = e.currentTarget.getAttribute('data-id');
                     const elementToDelete = memoryList.querySelector(`[data-id="${id}"]`);
                     
+                    if (!elementToDelete) return;
+
                     // カテゴリを削除する場合、配下の知識も削除
                     if (elementToDelete.classList.contains('category-item')) {
                         const categoryId = elementToDelete.getAttribute('data-id');
-                        let next = elementToDelete.nextElementSibling;
-                        while (next) {
-                            const nextToDelete = next;
-                            next = next.nextElementSibling;
-                            // 削除するカテゴリに属する知識アイテムだけを削除
-                            if (nextToDelete.classList.contains('knowledge-item') && nextToDelete.getAttribute('data-parent-id') === categoryId) {
-                                nextToDelete.remove();
-                            } else if (nextToDelete.classList.contains('category-item')) {
-                                break; // 次のカテゴリに到達したら終了
+                        // すべての知識アイテムをチェックし、該当するものを削除
+                        memoryList.querySelectorAll('.knowledge-item').forEach(knowledgeItem => {
+                            if (knowledgeItem.getAttribute('data-parent-id') === categoryId) {
+                                knowledgeItem.remove();
                             }
-                        }
+                        });
                     }
                     
                     elementToDelete.remove();
