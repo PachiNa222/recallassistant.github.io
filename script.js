@@ -8,6 +8,7 @@ function generateId() { return 'id-' + idCounter++; }
 
 let memories = [];
 let thoughts = [];
+let customTemplates = {}; // ユーザー作成のテンプレート
 
 // --- DOM要素 ---
 const memoryListEl = document.getElementById('memory-list');
@@ -17,19 +18,29 @@ const categoryGroup = document.getElementById('input-category-group');
 const knowledgeGroup = document.getElementById('input-knowledge-group');
 const targetCategorySelect = document.getElementById('target-category-select');
 
-// --- ★永続化（LocalStorage）関連処理 ---
+// テンプレート関連DOM
+const templateSelect = document.getElementById('template-select');
+const presetGroup = document.getElementById('preset-group');
+const customGroup = document.getElementById('custom-group');
+const deleteTemplateBtn = document.getElementById('delete-template-btn');
 
-// データを保存する
+// IO関連DOM
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFileInput = document.getElementById('import-file-input');
+
+// --- 永続化（LocalStorage） ---
+
 function saveData() {
     const data = {
         memories: memories,
         thoughts: thoughts,
-        idCounter: idCounter
+        idCounter: idCounter,
+        customTemplates: customTemplates
     };
     localStorage.setItem('memoApp_data', JSON.stringify(data));
 }
 
-// データを読み込む（初期化時）
 function loadData() {
     const json = localStorage.getItem('memoApp_data');
     if (json) {
@@ -38,52 +49,143 @@ function loadData() {
             memories = data.memories || [];
             thoughts = data.thoughts || [];
             idCounter = data.idCounter || 1;
+            customTemplates = data.customTemplates || {};
         } catch (e) {
             console.error("データ読み込みエラー", e);
         }
     }
 }
 
-// データを全削除する
 function clearAllData() {
-    if (confirm("全てのデータを削除しますか？この操作は取り消せません。")) {
+    if (confirm("全てのデータを削除しますか？\n（マイテンプレートも含むすべての保存データが消えます）")) {
         localStorage.removeItem('memoApp_data');
-        location.reload(); // ページをリロードして初期状態に戻す
+        location.reload();
     }
 }
 
 // --- 初期化 ---
-loadData(); // ★保存されたデータを読み込む
+loadData();
+updateTemplateDropdown(); // プルダウンの更新
 renderMemories();
 renderThoughts();
 
 // --- イベントリスナー ---
 
-// ★全削除ボタン
 document.getElementById('clear-all-btn').addEventListener('click', clearAllData);
 
-// ★テンプレート読込ボタン
-document.getElementById('load-template-btn').addEventListener('click', () => {
-    const input = document.getElementById('template-id-input');
-    const templateId = input.value;
+// ★テンプレート保存ボタン
+document.getElementById('save-template-btn').addEventListener('click', () => {
+    if (memories.length === 0) {
+        alert("保存する記憶データがありません。");
+        return;
+    }
+
+    const name = prompt("テンプレート名を入力してください:", "マイテンプレート");
+    if (!name) return;
+
+    if (customTemplates[name]) {
+        if (!confirm(`「${name}」は既に存在します。上書きしますか？`)) {
+            return;
+        }
+    }
+
+    customTemplates[name] = JSON.parse(JSON.stringify(memories));
+    saveData();
+    updateTemplateDropdown();
     
-    // TEMPLATESはtemplates.jsで定義されている
-    if (typeof TEMPLATES !== 'undefined' && TEMPLATES[templateId]) {
-        loadTemplate(TEMPLATES[templateId]);
-        input.value = ''; // 入力欄クリア
-    } else {
-        alert("指定されたIDのテンプレートが見つかりません\n(例: math, cooking)");
+    // 保存したものを選択状態にする
+    templateSelect.value = "custom:" + name;
+    updateTemplateControls(); // ボタン表示更新
+    
+    alert(`テンプレート「${name}」を保存しました。`);
+});
+
+// ★テンプレート削除ボタン
+deleteTemplateBtn.addEventListener('click', () => {
+    const value = templateSelect.value;
+    if (!value.startsWith('custom:')) return;
+
+    const name = value.replace('custom:', '');
+    if (confirm(`テンプレート「${name}」を削除しますか？`)) {
+        delete customTemplates[name];
+        saveData();
+        updateTemplateDropdown();
+        templateSelect.value = ""; // 選択解除
+        updateTemplateControls(); // ボタン表示更新
     }
 });
 
-// テンプレートデータを現在のメモリに追加する処理
-function loadTemplate(templateData) {
-    // テンプレートデータをディープコピーしてから追加（オリジナルに影響させない）
-    // また、IDは現在システムに合わせて新規発行する
+// ★プルダウンの変更検知
+templateSelect.addEventListener('change', updateTemplateControls);
+
+function updateTemplateControls() {
+    const value = templateSelect.value;
+    const isCustom = value.startsWith('custom:');
     
-    templateData.forEach(tplCat => {
+    // 削除ボタンの制御
+    if (isCustom) {
+        deleteTemplateBtn.style.display = 'block';
+        exportBtn.disabled = false; // エクスポート可能
+    } else {
+        deleteTemplateBtn.style.display = 'none';
+        exportBtn.disabled = true; // プリセットや未選択はエクスポート不可
+    }
+}
+
+// ★プルダウンの内容更新
+function updateTemplateDropdown() {
+    presetGroup.innerHTML = '';
+    customGroup.innerHTML = '';
+
+    // 1. プリセット
+    if (typeof TEMPLATES !== 'undefined') {
+        for (const key in TEMPLATES) {
+            const opt = document.createElement('option');
+            opt.value = "preset:" + key;
+            opt.textContent = key;
+            presetGroup.appendChild(opt);
+        }
+    }
+
+    // 2. マイテンプレート
+    for (const key in customTemplates) {
+        const opt = document.createElement('option');
+        opt.value = "custom:" + key;
+        opt.textContent = key;
+        customGroup.appendChild(opt);
+    }
+}
+
+// ★テンプレート読込ボタン
+document.getElementById('load-template-btn').addEventListener('click', () => {
+    const value = templateSelect.value;
+    if (!value) return;
+
+    let targetData = null;
+
+    if (value.startsWith('preset:')) {
+        const key = value.replace('preset:', '');
+        if (typeof TEMPLATES !== 'undefined') {
+            targetData = TEMPLATES[key];
+        }
+    } else if (value.startsWith('custom:')) {
+        const key = value.replace('custom:', '');
+        targetData = customTemplates[key];
+    }
+
+    if (targetData) {
+        loadTemplate(targetData);
+    } else {
+        alert("テンプレートデータの読み込みに失敗しました。");
+    }
+});
+
+function loadTemplate(templateData) {
+    const dataArray = Array.isArray(templateData) ? templateData : [];
+
+    dataArray.forEach(tplCat => {
         const newCatId = generateId();
-        const newItems = tplCat.items.map(tplItem => ({
+        const newItems = (tplCat.items || []).map(tplItem => ({
             id: generateId(),
             type: 'knowledge',
             name: tplItem.name,
@@ -99,10 +201,95 @@ function loadTemplate(templateData) {
         });
     });
 
-    saveData(); // 保存
-    renderMemories(); // 再描画
+    saveData();
+    renderMemories();
     alert("テンプレートを読み込みました");
 }
+
+// --- ★外部ファイル連携（Export/Import） ---
+
+// 1. 書き出し (Export)
+exportBtn.addEventListener('click', () => {
+    const value = templateSelect.value;
+    if (!value.startsWith('custom:')) return;
+
+    const name = value.replace('custom:', '');
+    const data = customTemplates[name];
+
+    if (!data) return alert("データが見つかりません");
+
+    // JSONデータをBlobオブジェクトに変換
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    
+    // ダウンロードリンクを生成してクリックさせる
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name + ".json"; // ファイル名
+    document.body.appendChild(a);
+    a.click();
+    
+    // 後始末
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// 2. 読み込み (Import) - ボタンクリックでinput発火
+importBtn.addEventListener('click', () => {
+    importFileInput.click();
+});
+
+// ファイルが選択されたら処理開始
+importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const json = event.target.result;
+            const data = JSON.parse(json);
+            
+            // 簡易的なデータ構造チェック
+            if (!Array.isArray(data)) {
+                throw new Error("データ形式が正しくありません（配列ではありません）");
+            }
+
+            // ファイル名をテンプレート名として使う（拡張子を除く）
+            let name = file.name.replace(/\.json$/i, "");
+            
+            // 既に同名がある場合、確認またはリネーム
+            if (customTemplates[name]) {
+                if (!confirm(`「${name}」というテンプレートは既に存在します。上書きしますか？`)) {
+                    // キャンセルの場合、名前を変更して登録を試みることも可能だが今回は中断
+                    importFileInput.value = ''; // リセット
+                    return;
+                }
+            }
+
+            // 保存
+            customTemplates[name] = data;
+            saveData();
+            updateTemplateDropdown();
+            
+            // 選択状態にする
+            templateSelect.value = "custom:" + name;
+            updateTemplateControls();
+            
+            alert(`「${name}」を読み込みました！`);
+
+        } catch (err) {
+            alert("ファイルの読み込みに失敗しました。\n" + err.message);
+        }
+        // inputをリセット（同じファイルを再度選べるように）
+        importFileInput.value = '';
+    };
+    reader.readAsText(file);
+});
+
+
+// --- 記憶・思考の作成・編集系（以前と同様） ---
 
 document.getElementById('add-memory-btn').addEventListener('click', () => {
     document.getElementById('new-category-name').value = '';
@@ -180,7 +367,7 @@ function saveMemory() {
         }
     }
     closeModal();
-    saveData(); // ★保存
+    saveData();
     renderMemories();
 }
 
@@ -193,7 +380,7 @@ document.getElementById('add-thought-btn').addEventListener('click', () => {
             text: "",
             droppedItems: []
         });
-        saveData(); // ★保存
+        saveData();
         renderThoughts();
     }
 });
@@ -325,10 +512,9 @@ function renderThoughts() {
         const textarea = document.createElement('textarea');
         textarea.className = 'free-input';
         textarea.value = th.text;
-        // 入力時に保存する
         textarea.oninput = (e) => { 
             thoughts[index].text = e.target.value;
-            saveData(); // ★保存
+            saveData();
         };
 
         const label2 = document.createElement('div');
@@ -369,7 +555,7 @@ function renderThoughts() {
             removeBtn.style.marginLeft = "auto";
             removeBtn.onclick = () => {
                 thoughts[index].droppedItems.splice(dIndex, 1);
-                saveData(); // ★保存
+                saveData();
                 renderThoughts();
             };
             dEl.appendChild(removeBtn);
@@ -390,13 +576,13 @@ function renderThoughts() {
 
 function toggleCollapse(index) {
     memories[index].collapsed = !memories[index].collapsed;
-    saveData(); // ★保存
+    saveData();
     renderMemories();
 }
 function deleteCategory(index) {
     if(confirm("このカテゴリと含まれる知識を削除しますか？")) {
         memories.splice(index, 1);
-        saveData(); // ★保存
+        saveData();
         renderMemories();
     }
 }
@@ -404,7 +590,7 @@ function editCategory(index) {
     const newName = prompt("カテゴリ名を編集:", memories[index].name);
     if(newName) {
         memories[index].name = newName;
-        saveData(); // ★保存
+        saveData();
         renderMemories();
     }
 }
@@ -412,7 +598,7 @@ function editCategory(index) {
 function deleteKnowledge(catIndex, kIndex) {
     if(confirm("この知識を削除しますか？")) {
         memories[catIndex].items.splice(kIndex, 1);
-        saveData(); // ★保存
+        saveData();
         renderMemories();
     }
 }
@@ -424,7 +610,7 @@ function editKnowledge(catIndex, kIndex) {
         if(newRel !== null) {
             item.name = newName;
             item.relation = newRel;
-            saveData(); // ★保存
+            saveData();
             renderMemories();
         }
     }
@@ -433,7 +619,7 @@ function editKnowledge(catIndex, kIndex) {
 function deleteThought(index) {
     if(confirm("この思考シートを削除しますか？")) {
         thoughts.splice(index, 1);
-        saveData(); // ★保存
+        saveData();
         renderThoughts();
     }
 }
@@ -441,7 +627,7 @@ function editThoughtName(index) {
     const newName = prompt("思考名を編集:", thoughts[index].name);
     if(newName) {
         thoughts[index].name = newName;
-        saveData(); // ★保存
+        saveData();
         renderThoughts();
     }
 }
@@ -464,7 +650,7 @@ function handleDrop(e, thoughtIndex) {
     try {
         const data = JSON.parse(raw);
         thoughts[thoughtIndex].droppedItems.push(data);
-        saveData(); // ★保存
+        saveData();
         renderThoughts();
     } catch(err) {
         console.error("Drop error", err);
