@@ -17,11 +17,92 @@ const categoryGroup = document.getElementById('input-category-group');
 const knowledgeGroup = document.getElementById('input-knowledge-group');
 const targetCategorySelect = document.getElementById('target-category-select');
 
+// --- ★永続化（LocalStorage）関連処理 ---
+
+// データを保存する
+function saveData() {
+    const data = {
+        memories: memories,
+        thoughts: thoughts,
+        idCounter: idCounter
+    };
+    localStorage.setItem('memoApp_data', JSON.stringify(data));
+}
+
+// データを読み込む（初期化時）
+function loadData() {
+    const json = localStorage.getItem('memoApp_data');
+    if (json) {
+        try {
+            const data = JSON.parse(json);
+            memories = data.memories || [];
+            thoughts = data.thoughts || [];
+            idCounter = data.idCounter || 1;
+        } catch (e) {
+            console.error("データ読み込みエラー", e);
+        }
+    }
+}
+
+// データを全削除する
+function clearAllData() {
+    if (confirm("全てのデータを削除しますか？この操作は取り消せません。")) {
+        localStorage.removeItem('memoApp_data');
+        location.reload(); // ページをリロードして初期状態に戻す
+    }
+}
+
 // --- 初期化 ---
+loadData(); // ★保存されたデータを読み込む
 renderMemories();
 renderThoughts();
 
 // --- イベントリスナー ---
+
+// ★全削除ボタン
+document.getElementById('clear-all-btn').addEventListener('click', clearAllData);
+
+// ★テンプレート読込ボタン
+document.getElementById('load-template-btn').addEventListener('click', () => {
+    const input = document.getElementById('template-id-input');
+    const templateId = input.value;
+    
+    // TEMPLATESはtemplates.jsで定義されている
+    if (typeof TEMPLATES !== 'undefined' && TEMPLATES[templateId]) {
+        loadTemplate(TEMPLATES[templateId]);
+        input.value = ''; // 入力欄クリア
+    } else {
+        alert("指定されたIDのテンプレートが見つかりません\n(例: math, cooking)");
+    }
+});
+
+// テンプレートデータを現在のメモリに追加する処理
+function loadTemplate(templateData) {
+    // テンプレートデータをディープコピーしてから追加（オリジナルに影響させない）
+    // また、IDは現在システムに合わせて新規発行する
+    
+    templateData.forEach(tplCat => {
+        const newCatId = generateId();
+        const newItems = tplCat.items.map(tplItem => ({
+            id: generateId(),
+            type: 'knowledge',
+            name: tplItem.name,
+            relation: tplItem.relation
+        }));
+
+        memories.push({
+            id: newCatId,
+            type: 'category',
+            name: tplCat.name,
+            collapsed: false,
+            items: newItems
+        });
+    });
+
+    saveData(); // 保存
+    renderMemories(); // 再描画
+    alert("テンプレートを読み込みました");
+}
 
 document.getElementById('add-memory-btn').addEventListener('click', () => {
     document.getElementById('new-category-name').value = '';
@@ -99,6 +180,7 @@ function saveMemory() {
         }
     }
     closeModal();
+    saveData(); // ★保存
     renderMemories();
 }
 
@@ -111,6 +193,7 @@ document.getElementById('add-thought-btn').addEventListener('click', () => {
             text: "",
             droppedItems: []
         });
+        saveData(); // ★保存
         renderThoughts();
     }
 });
@@ -242,7 +325,11 @@ function renderThoughts() {
         const textarea = document.createElement('textarea');
         textarea.className = 'free-input';
         textarea.value = th.text;
-        textarea.oninput = (e) => { thoughts[index].text = e.target.value; };
+        // 入力時に保存する
+        textarea.oninput = (e) => { 
+            thoughts[index].text = e.target.value;
+            saveData(); // ★保存
+        };
 
         const label2 = document.createElement('div');
         label2.className = 'drop-area-label';
@@ -259,7 +346,6 @@ function renderThoughts() {
             dEl.className = 'dropped-item';
             
             let content = '';
-            // ★変更点：名前と関係を縦に並べるため、divで囲む
             if(dItem.type === 'knowledge') {
                 content = `
                     <div class="dropped-info">
@@ -283,6 +369,7 @@ function renderThoughts() {
             removeBtn.style.marginLeft = "auto";
             removeBtn.onclick = () => {
                 thoughts[index].droppedItems.splice(dIndex, 1);
+                saveData(); // ★保存
                 renderThoughts();
             };
             dEl.appendChild(removeBtn);
@@ -303,11 +390,13 @@ function renderThoughts() {
 
 function toggleCollapse(index) {
     memories[index].collapsed = !memories[index].collapsed;
+    saveData(); // ★保存
     renderMemories();
 }
 function deleteCategory(index) {
     if(confirm("このカテゴリと含まれる知識を削除しますか？")) {
         memories.splice(index, 1);
+        saveData(); // ★保存
         renderMemories();
     }
 }
@@ -315,6 +404,7 @@ function editCategory(index) {
     const newName = prompt("カテゴリ名を編集:", memories[index].name);
     if(newName) {
         memories[index].name = newName;
+        saveData(); // ★保存
         renderMemories();
     }
 }
@@ -322,6 +412,7 @@ function editCategory(index) {
 function deleteKnowledge(catIndex, kIndex) {
     if(confirm("この知識を削除しますか？")) {
         memories[catIndex].items.splice(kIndex, 1);
+        saveData(); // ★保存
         renderMemories();
     }
 }
@@ -333,6 +424,7 @@ function editKnowledge(catIndex, kIndex) {
         if(newRel !== null) {
             item.name = newName;
             item.relation = newRel;
+            saveData(); // ★保存
             renderMemories();
         }
     }
@@ -341,6 +433,7 @@ function editKnowledge(catIndex, kIndex) {
 function deleteThought(index) {
     if(confirm("この思考シートを削除しますか？")) {
         thoughts.splice(index, 1);
+        saveData(); // ★保存
         renderThoughts();
     }
 }
@@ -348,6 +441,7 @@ function editThoughtName(index) {
     const newName = prompt("思考名を編集:", thoughts[index].name);
     if(newName) {
         thoughts[index].name = newName;
+        saveData(); // ★保存
         renderThoughts();
     }
 }
@@ -355,7 +449,7 @@ function editThoughtName(index) {
 // --- ドラッグ&ドロップ ---
 
 function handleDragStart(e, data) {
-    e.stopPropagation(); // 重要：親要素へのイベント伝播を停止
+    e.stopPropagation();
     e.dataTransfer.setData('text/plain', JSON.stringify(data));
     e.dataTransfer.effectAllowed = 'copy';
 }
@@ -370,6 +464,7 @@ function handleDrop(e, thoughtIndex) {
     try {
         const data = JSON.parse(raw);
         thoughts[thoughtIndex].droppedItems.push(data);
+        saveData(); // ★保存
         renderThoughts();
     } catch(err) {
         console.error("Drop error", err);
