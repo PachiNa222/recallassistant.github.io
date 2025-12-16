@@ -47,7 +47,7 @@ body {
     display: flex; flex-direction: column;
 }
 
-/* ★追加：開閉ヘッダー */
+/* ★開閉ヘッダー */
 .settings-header {
     padding: 10px 15px;
     cursor: pointer;
@@ -58,7 +58,7 @@ body {
     justify-content: space-between;
     align-items: center;
     background: #f4f5f7;
-    user-select: none; /* 文字選択防止 */
+    user-select: none;
 }
 .settings-header:hover {
     background: #e0e0e0;
@@ -66,6 +66,8 @@ body {
 
 /* 中身のコンテンツ */
 #settings-content {
+    /* JSで制御しますが、CSSでも念のため隠しておきます */
+    /* display: none; はHTMLのインラインスタイルで制御されますが、ここでも指定可能 */
     padding: 10px 15px;
     border-top: 1px solid #ddd;
     background: #fff;
