@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>想起を補助する教材</title>
+    <title>思考整理ツール</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="app-layout">
+<body>
 
     <div id="sidebar">
-
         <div class="sidebar-header">記憶</div>
         
         <div class="settings-area">
@@ -19,7 +18,36 @@
             </div>
             
             <div id="settings-content" style="display:none;">
-               </div>
+                <div class="template-section">
+                    <div class="template-label">テンプレート読込・保存</div>
+                    <div class="template-control">
+                        <select id="template-select">
+                            <option value="">選択してください...</option>
+                            <optgroup label="プリセット" id="preset-group"></optgroup>
+                            <optgroup label="マイテンプレート" id="custom-group"></optgroup>
+                        </select>
+                        <button id="load-template-btn">読込</button>
+                    </div>
+                    
+                    <div class="template-actions">
+                        <button id="save-template-btn" class="action-btn">現在の記憶をテンプレート保存</button>
+                        <button id="delete-template-btn" class="danger-btn" style="display:none;">選択したテンプレートを削除</button>
+                    </div>
+                </div>
+
+                <div class="io-actions">
+                    <div class="template-label">共有・バックアップ</div>
+                    <div class="io-buttons">
+                        <button id="export-btn" class="io-btn" disabled>書き出し</button>
+                        <button id="import-btn" class="io-btn">読み込み</button>
+                        <input type="file" id="import-file-input" accept=".json" style="display:none;">
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #ddd; width: 100%; margin: 10px 0;">
+                
+                <button id="clear-all-btn" class="danger-btn">全データ削除 (リセット)</button>
+            </div>
         </div>
 
         <div id="memory-list"></div>
@@ -36,7 +64,7 @@
     </div>
 
     <div id="modal-overlay">
-       <div class="modal-box" id="memory-modal">
+        <div class="modal-box" id="memory-modal">
             <div class="modal-title">新規作成</div>
             <div>
                 <label><input type="radio" name="createType" value="category" checked> カテゴリ</label>
