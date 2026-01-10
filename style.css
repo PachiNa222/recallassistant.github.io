@@ -1,4 +1,6 @@
-/* 基本定義 */
+/* =========================================
+   基本設定 (共通)
+   ========================================= */
 :root {
     --sidebar-width: 300px;
     --bg-color: #f4f5f7;
@@ -8,6 +10,7 @@
     --white: #ffffff;
     --danger-color: #e74c3c;
     --io-color: #8e44ad;
+    --card-bg: #ffffff; /* ポータル用に追加 */
 }
 
 * { box-sizing: border-box; }
@@ -15,10 +18,33 @@
 body {
     margin: 0; padding: 0;
     font-family: "Helvetica Neue", Arial, sans-serif;
-    display: flex; height: 100vh;
-    background-color: var(--bg-color); color: var(--text-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* =========================================
+   レイアウト切り替え
+   ========================================= */
+
+/* 【アプリ画面用レイアウト】
+   画面いっぱいに広げ、スクロールは内部で行う */
+body.app-layout {
+    display: flex;
+    height: 100vh;
     overflow: hidden;
 }
+
+/* 【ポータル画面用レイアウト】
+   通常のWebページのように縦にスクロールする */
+body.portal-layout {
+    display: block;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+/* =========================================
+   アプリ画面 (.app-layout) 用のスタイル
+   ========================================= */
 
 .icon-btn {
     cursor: pointer; border: none; background: none;
@@ -26,63 +52,41 @@ body {
 }
 .icon-btn:hover { color: var(--primary-color); }
 
-/* --- サイドバー --- */
+/* サイドバー */
 #sidebar {
     width: var(--sidebar-width);
     background-color: var(--white);
     border-right: 1px solid var(--border-color);
     display: flex; flex-direction: column; flex-shrink: 0;
 }
-
 .sidebar-header {
     padding: 15px; font-weight: bold;
     border-bottom: 1px solid var(--border-color);
     background: #fafafa;
 }
 
-/* 設定エリア全体 */
+/* 設定エリア */
 .settings-area {
     border-bottom: 1px solid var(--border-color);
     background: #f9f9f9;
     display: flex; flex-direction: column;
 }
-
-/* ★開閉ヘッダー */
 .settings-header {
-    padding: 10px 15px;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #555;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f4f5f7;
-    user-select: none;
+    padding: 10px 15px; cursor: pointer;
+    font-size: 0.9em; font-weight: bold; color: #555;
+    display: flex; justify-content: space-between; align-items: center;
+    background: #f4f5f7; user-select: none;
 }
-.settings-header:hover {
-    background: #e0e0e0;
-}
-
-/* 中身のコンテンツ */
+.settings-header:hover { background: #e0e0e0; }
 #settings-content {
-    /* JSで制御しますが、CSSでも念のため隠しておきます */
-    /* display: none; はHTMLのインラインスタイルで制御されますが、ここでも指定可能 */
-    padding: 10px 15px;
-    border-top: 1px solid #ddd;
-    background: #fff;
+    padding: 10px 15px; border-top: 1px solid #ddd; background: #fff;
 }
 
 .template-section {
     display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;
 }
-
-.template-label {
-    font-size: 0.8em; color: #666; font-weight: bold;
-}
-.template-control {
-    display: flex; gap: 5px;
-}
+.template-label { font-size: 0.8em; color: #666; font-weight: bold; }
+.template-control { display: flex; gap: 5px; }
 #template-select {
     flex: 1; padding: 5px; font-size: 0.9em;
     border: 1px solid #ccc; border-radius: 3px;
@@ -93,37 +97,26 @@ body {
     border: none; border-radius: 3px; font-size: 0.9em;
 }
 
-.template-actions {
-    display: flex; flex-direction: column; gap: 5px;
-}
+.template-actions { display: flex; flex-direction: column; gap: 5px; }
 .action-btn {
     padding: 5px; cursor: pointer;
     background: #fff; color: var(--primary-color);
     border: 1px solid var(--primary-color);
-    border-radius: 3px; font-size: 0.8em;
-    width: 100%;
+    border-radius: 3px; font-size: 0.8em; width: 100%;
 }
 .action-btn:hover { background: #e6f7ff; }
-
 .danger-btn {
     padding: 5px; cursor: pointer;
     background: #fff; color: var(--danger-color);
     border: 1px solid var(--danger-color);
-    border-radius: 3px; font-size: 0.8em;
-    width: 100%;
+    border-radius: 3px; font-size: 0.8em; width: 100%;
 }
 .danger-btn:hover { background: #ffebeb; }
 
-/* IO（書き出し・読み込み） */
-.io-actions {
-    margin-top: 5px;
-}
-.io-buttons {
-    display: flex; gap: 5px;
-}
+.io-actions { margin-top: 5px; }
+.io-buttons { display: flex; gap: 5px; }
 .io-btn {
-    flex: 1;
-    padding: 5px; cursor: pointer;
+    flex: 1; padding: 5px; cursor: pointer;
     background: #fff; color: var(--io-color);
     border: 1px solid var(--io-color);
     border-radius: 3px; font-size: 0.8em;
@@ -133,12 +126,9 @@ body {
     color: #ccc; border-color: #ccc; cursor: not-allowed; background: #fff;
 }
 
+#memory-list { flex: 1; overflow-y: auto; padding: 10px; }
 
-#memory-list {
-    flex: 1; overflow-y: auto; padding: 10px;
-}
-
-/* カテゴリ・知識リストのデザイン */
+/* カテゴリ・知識リスト */
 .category-item {
     border: 1px solid var(--border-color); margin-bottom: 10px;
     background: #fff; border-radius: 4px;
@@ -148,9 +138,7 @@ body {
     display: flex; align-items: center; justify-content: space-between;
     font-weight: bold; cursor: pointer;
 }
-.category-content {
-    display: flex; align-items: center; gap: 5px; flex: 1;
-}
+.category-content { display: flex; align-items: center; gap: 5px; flex: 1; }
 .knowledge-list { padding: 5px; display: block; }
 .knowledge-list.collapsed { display: none; }
 .knowledge-item {
@@ -161,11 +149,10 @@ body {
 .knowledge-info { display: flex; flex-direction: column; }
 .knowledge-name { font-weight: bold; }
 .knowledge-relation { font-size: 0.8em; color: #666; }
-
 [draggable="true"] { cursor: grab; }
 [draggable="true"]:active { cursor: grabbing; }
 
-/* --- メインエリア --- */
+/* メインエリア */
 #main-area {
     flex: 1; display: flex; flex-direction: column; overflow: hidden;
 }
@@ -216,22 +203,15 @@ body {
     display: flex; align-items: center; gap: 10px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.dropped-info {
-    display: flex; flex-direction: column; gap: 3px;
-}
-.dropped-name {
-    font-weight: bold; color: #333; line-height: 1.2;
-}
+.dropped-info { display: flex; flex-direction: column; gap: 3px; }
+.dropped-name { font-weight: bold; color: #333; line-height: 1.2; }
 .dropped-relation {
     font-size: 0.85em; background-color: #eee;
-    padding: 2px 6px; border-radius: 4px; color: #555;
-    align-self: flex-start;
+    padding: 2px 6px; border-radius: 4px; color: #555; align-self: flex-start;
 }
 .dropped-category-tag {
     font-size: 0.85em; color: #888; align-self: flex-start;
 }
-
-/* --- 共通 --- */
 .add-btn-container {
     padding: 15px; border-top: 1px solid var(--border-color);
     display: flex; justify-content: flex-end; background: #fff;
@@ -244,7 +224,6 @@ body {
 }
 .add-btn:hover { background-color: #eee; }
 
-/* --- モーダル --- */
 #modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.4); display: none;
@@ -258,4 +237,65 @@ body {
 .modal-input { width: 100%; padding: 8px; box-sizing: border-box; }
 .modal-select { width: 100%; padding: 8px; box-sizing: border-box; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
-button { cursor: pointer; padding: 5px 10px; }
+
+/* =========================================
+   ポータル画面 (.portal-layout) 用のスタイル
+   ========================================= */
+
+.portal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ヘッダーエリア */
+.hero {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 60px 0;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.hero h1 { margin: 0; font-size: 2.5em; font-weight: bold; }
+.hero p { margin-top: 10px; font-size: 1.1em; opacity: 0.9; }
+
+/* グリッドレイアウト */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding-bottom: 40px;
+}
+
+/* カードスタイル */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    border-color: var(--primary-color);
+}
+
+.card-icon { font-size: 3em; margin-bottom: 15px; }
+.card-content h2 { margin: 0 0 10px 0; color: var(--primary-color); }
+.card-content p { margin: 0 0 20px 0; color: #666; font-size: 0.95em; }
+.link-text { font-weight: bold; color: var(--primary-color); margin-top: auto; }
+
+/* フッター */
+footer {
+    text-align: center;
+    padding: 20px 0;
+    color: #888;
+    font-size: 0.8em;
+    border-top: 1px solid #ddd;
+}
