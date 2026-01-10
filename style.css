@@ -59,6 +59,28 @@ body.portal-layout {
     border-right: 1px solid var(--border-color);
     display: flex; flex-direction: column; flex-shrink: 0;
 }
+
+/* ★追加：戻るボタン用エリア */
+.sidebar-nav {
+    padding: 10px 15px;
+    background-color: #fcfcfc;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.back-link {
+    text-decoration: none;
+    color: #666;
+    font-size: 0.9em;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--primary-color);
+}
+
 .sidebar-header {
     padding: 15px; font-weight: bold;
     border-bottom: 1px solid var(--border-color);
